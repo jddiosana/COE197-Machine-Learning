@@ -33,7 +33,7 @@ def select_src_pts(img):
   
     def mouse_callback(event, x, y, flags, param):
         # store the points clicked by the user
-        if event == cv2.EVENT_LBUTTONDOWN:
+        if event == cv2.EVENT_LBUTTONDOWN  and len(src_pts) < 4:
             src_pts.append([x, y])
             
             cv2.circle(img_copy, (x, y), 5, (0, 255, 0), -1) # draw a circle on the image to guide the user
