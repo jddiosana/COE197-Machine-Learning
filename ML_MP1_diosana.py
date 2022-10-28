@@ -13,8 +13,8 @@ def find_homography_matrix(src_pts, dst_pts):
         y_i = src_pts[i][1] # y_i = y coordinate of ith point in source image
         x_i_prime = dst_pts[i][0] # x_i_prime = x coordinate of ith dst point
         y_i_prime = dst_pts[i][1] # y_i_prime = y coordinate of ith dst point
-        A[2*i] = [-x_i, -y_i, -1, 0, 0, 0, x_i*x_i_prime, y_i*x_i_prime]
-        A[2*i+1] = [0, 0, 0, -x_i, -y_i, -1, x_i*y_i_prime, y_i*y_i_prime]
+        A[2*i] = [x_i, y_i, 1, 0, 0, 0, -x_i*x_i_prime, -y_i*x_i_prime]
+        A[2*i+1] = [0, 0, 0, x_i, y_i, 1, -x_i*y_i_prime, -y_i*y_i_prime]
         b.append(x_i_prime)
         b.append(y_i_prime)
 
