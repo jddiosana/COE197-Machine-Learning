@@ -13,15 +13,24 @@ def find_homography_matrix(src_pts, dst_pts):
         y_i = src_pts[i][1] # y_i = y coordinate of ith point in source image
         x_i_prime = dst_pts[i][0] # x_i_prime = x coordinate of ith dst point
         y_i_prime = dst_pts[i][1] # y_i_prime = y coordinate of ith dst point
-        A[2*i] = [x_i, y_i, 1, 0, 0, 0, -x_i*x_i_prime, -y_i*x_i_prime]
-        A[2*i+1] = [0, 0, 0, x_i, y_i, 1, -x_i*y_i_prime, -y_i*y_i_prime]
+        A[2*i] = [x_i, y_i, 1, 0, 0, 0, -x_i*x_i_prime, -y_i*x_i_prime] # update matrix A
+        A[2*i+1] = [0, 0, 0, x_i, y_i, 1, -x_i*y_i_prime, -y_i*y_i_prime] # update matrix A
         b.append(x_i_prime)
         b.append(y_i_prime)
 
     # using least square estimation, we can find the solution to the matrix Ah = b
-    h = np.linalg.lstsq(A, b, rcond=0)[0]
-    h = np.concatenate((h, [1]), axis=0)  # use 1 as the last element of h
-    H = h.reshape(3,3) # reshape h into a 3x3 matrix
+    # we use the Moore-Penrose pseudoinverse to find the solution
+    h = np.matmul(A.T, A)
+    h = np.linalg.inv(h)
+    h = np.matmul(h, A.T)
+    h = np.matmul(h, b) # finishing here, we get the Moore-Penrose pseudoinverse h = (A.T * A)^-1 * A.T * b
+    h = np.append(h, 1) # use 1 as the last element of h
+    H = np.reshape(h, (3,3)) # reshape h to a 3x3 matrix
+    
+    # Alternatively, we can use the code below and get the same result
+    # h = np.linalg.lstsq(A, b, rcond=0)[0] 
+    # h = np.concatenate((h, [1]), axis=0)  
+    # H = h.reshape(3,3) 
 
     return H
 
@@ -80,25 +89,25 @@ def select_src_pts(img):
 
 def get_destination_points(src_pts):
 
-    [bottom_left_src, top_left_src, top_right_src, bottom_right_src] = src_pts # read the source points
+    [top_right_src, top_left_src, bottom_left_src, bottom_right_src] = src_pts # read source points
 
-    #get maximum vertical length of the object (i.e., maximum distance between top and bottom points)
+    # get maximum vertical length of the object (i.e., maximum distance between top and bottom points)
     vlen_max = int(max(np.sqrt((bottom_left_src[0] - top_left_src[0])**2 + (bottom_left_src[1] - top_left_src[1])**2),
               np.sqrt((bottom_right_src[0] - top_right_src[0])**2 + (bottom_right_src[1] - top_right_src[1])**2)))
 
-    #get maximum horizontal length of the object (i.e., maximum distance between left and right points)
+    # get maximum horizontal length of the object (i.e., maximum distance between left and right points)
     hlen_max = int(max(np.sqrt((top_left_src[0] - top_right_src[0])**2 + (top_left_src[1] - top_right_src[1])**2),
                 np.sqrt((bottom_left_src[0] - bottom_right_src[0])**2 + (bottom_left_src[1] - bottom_right_src[1])**2)))
 
     # get the destination points using the maximum vertical and horizontal lengths
-    bottom_left_dst = [0,vlen_max-1] # bottom left point of the destination image
+    top_right_dst = [0,hlen_max-1] # bottom left point of the destination image
     top_left_dst = [0,0] # top left point of the destination image
-    top_right_dst = [hlen_max-1,0] # top right point of the destination image
-    bottom_right_dst = [hlen_max-1,vlen_max-1] # bottom right point of the destination image
+    bottom_left_dst = [vlen_max-1,0] # top right point of the destination image
+    bottom_right_dst = [vlen_max-1,hlen_max-1] # bottom right point of the destination image
 
-    dst = [bottom_left_dst, top_left_dst, top_right_dst, bottom_right_dst] # collect dst points in a list
+    dst = [top_right_dst, top_left_dst, bottom_left_dst, bottom_right_dst] # collect dst points in a list
     
-    return dst, hlen_max, vlen_max
+    return [dst, hlen_max, vlen_max]
 
 if __name__ == '__main__':
     
@@ -109,7 +118,7 @@ if __name__ == '__main__':
     [dst, hlen_max, vlen_max] = get_destination_points(src)
 
     H = find_homography_matrix(src, dst)
-    img_mapped = cv2.warpPerspective(img, H, (hlen_max, vlen_max)) # map the image to the destination image using the homography matrix
+    img_mapped = cv2.warpPerspective(img, H, (vlen_max, hlen_max)) # map the image to the destination image using the homography matrix
 
     cv2.imshow('Projected Image', img_mapped)
     cv2.waitKey(0)
