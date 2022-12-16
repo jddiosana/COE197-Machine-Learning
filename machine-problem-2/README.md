@@ -12,4 +12,4 @@ To show plots for training losses, train data vs. predicted data, test data vs. 
 
  `python solver.py --show_plot`
  
- A Jupyter notebook version is also available to show the processes of loading data, preprocessing data, training model, fitting model and evaluating the model equation.
+ A Jupyter notebook version [solver.ipynb](https://github.com/jddiosana/COE197-Machine-Learning/blob/master/machine-problem-2/solver.ipynb) is also available to show the processes of loading data, preprocessing data, training model, fitting model and evaluating the model equation.
