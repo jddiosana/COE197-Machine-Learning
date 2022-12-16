@@ -1,22 +1,26 @@
-def predict_data(wandb, x):
+import numpy as np
+from tinygrad.tensor import Tensor
+
+def predict_data(wandb, x, degree):
     # predict the output given the weights and bias
-    w = wandb[0]
-    b = wandb[1]
-    return w.data[0]*x**4 + w.data[1]*x**3 + w.data[2]*x**2 + w.data[3]*x + b.data
+    w = wandb[0].data
+    b = wandb[1].data
+    y_pred = np.zeros(len(x))
+    for i in range(len(x)):
+        for j in range(degree):
+            y_pred[i] += w[j]*x[i]**(degree-j)
+        y_pred[i] += b
+    return y_pred
 
 def loss_fn(y_pred, y_true):
     # calculate the loss
     return ((y_pred - y_true)**2).mean()
 
-def calc_grad(x, y, w, b):
+def calc_grad(x, y, w, b, degree):
     # calculate the gradient of the loss function
-    
-    y_pred = predict_data([w, b], x)
-    dL_w0 = 2*(y_pred-y)*x**4
-    dL_w1 = 2*(y_pred-y)*x**3
-    dL_w2 = 2*(y_pred-y)*x**2
-    dL_w3 = 2*(y_pred-y)*x
-    dL_b = 2*(y_pred-y)
-
-    return [dL_w0.mean(), dL_w1.mean(), dL_w2.mean(), dL_w3.mean(), dL_b.mean()]
-    
+    dl_wb = np.zeros(degree+1)
+    y_pred = predict_data([w, b], x, degree)
+    for i in range(degree):
+        dl_wb[i] = (2*(y_pred-y)*x**(degree-i)).mean()
+    dl_wb[degree] = (2*(y_pred-y)).mean()
+    return dl_wb
