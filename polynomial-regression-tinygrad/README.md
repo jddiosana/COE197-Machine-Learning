@@ -1,3 +1,6 @@
+#### About
+This is a polynomial solver program using Stochastic Gradient Descent (SGD) in TinyGrad framework. A k-fold cross validation technique is also used to evaluate the model performance given the limited data.
+
 #### Install
 `pip install -r requirements.txt`
 
